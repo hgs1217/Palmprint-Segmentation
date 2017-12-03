@@ -24,6 +24,6 @@ def sobel(img):
 
 if __name__ == '__main__':
     for i in range(1, 9):
-        img = cv2.imread("test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         res = sobel(img)
-        cv2.imwrite("result{}.jpg".format(i), res)
+        cv2.imwrite("pics/result{}.jpg".format(i), res)

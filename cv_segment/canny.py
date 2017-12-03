@@ -11,6 +11,6 @@ def canny(img):
 
 if __name__ == '__main__':
     for i in range(1, 9):
-        img = cv2.imread("test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         res = canny(img)
-        cv2.imwrite("canny{}.jpg".format(i), res)
+        cv2.imwrite("pics/canny{}.jpg".format(i), res)
