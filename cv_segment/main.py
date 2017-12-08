@@ -57,8 +57,8 @@ def local_ext(canny):
 
 
 def get_roi(img):
-    image = cv2.GaussianBlur(img, (7, 7), 0)
-    canny = cv2.Canny(image, 80, 100)
+    image = cv2.GaussianBlur(img, (5, 5), 0)
+    canny = cv2.Canny(image, 80, 120)
     valley_pxs = local_ext(canny)
     for row, col in valley_pxs:
         cv2.circle(canny, (col, row), 5, (255, 0, 0), 3)

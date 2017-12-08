@@ -2,10 +2,12 @@
 # @Create Date: 2017/12/3
 
 import cv2
+import cv_segment.gabor as gabor
 
 
 def canny(img):
     image = cv2.GaussianBlur(img, (7, 7), 0)
+    image = gabor.get_gabor(image)[12]
     return cv2.Canny(image, 80, 100)
 
 
