@@ -23,12 +23,14 @@ def sobel(img):
 
 
 def laplace(img):
-    image = cv2.bilateralFilter(img, 7, 75, 75)
-    # image = cv2.GaussianBlur(image, (5, 5), 0)
+    image = cv2.bilateralFilter(img, 9, 10, 10)
+    # image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.medianBlur(image, 7)
     gray_lap = cv2.Laplacian(image, cv2.CV_16S, ksize=5)
     res = cv2.convertScaleAbs(gray_lap)
-    _, res = cv2.threshold(res, 50, 255, cv2.THRESH_TOZERO)
+    _, res = cv2.threshold(res, 20, 255, cv2.THRESH_BINARY)
+    res = cv2.GaussianBlur(res, (11, 11), 0)
+    _, res = cv2.threshold(res, 150, 255, cv2.THRESH_BINARY)
     return res
 
 
@@ -38,4 +40,6 @@ if __name__ == '__main__':
         # res = sobel(img)
         # cv2.imwrite("pics/sobel{}.jpg".format(i), res)
         res = laplace(img)
+        res = cv2.medianBlur(res, 5)
+        res = cv2.medianBlur(res, 11)
         cv2.imwrite("pics/laplace{}.jpg".format(i), res)
