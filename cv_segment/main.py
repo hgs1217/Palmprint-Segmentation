@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np
+import cv_segment.gabor as gabor
 
 
 def smooth_max(pxs):
@@ -56,13 +57,25 @@ def local_ext(canny):
     return valley_pxs
 
 
+def canny(img):
+    """
+    Canny cut based on Gabor process, which has a very good result on dataset image.
+    """
+    image = cv2.GaussianBlur(img, (7, 7), 0)
+    image = gabor.get_gabor(image)[12]
+    return cv2.Canny(image, 80, 100)
+
+
 def get_roi(img):
+    """
+    Region of interest get
+    """
     image = cv2.GaussianBlur(img, (5, 5), 0)
-    canny = cv2.Canny(image, 80, 120)
-    valley_pxs = local_ext(canny)
+    res = canny(image)
+    valley_pxs = local_ext(res)
     for row, col in valley_pxs:
-        cv2.circle(canny, (col, row), 5, (255, 0, 0), 3)
-    return canny
+        cv2.circle(res, (col, row), 5, (255, 0, 0), 3)
+    return res
 
 
 if __name__ == '__main__':

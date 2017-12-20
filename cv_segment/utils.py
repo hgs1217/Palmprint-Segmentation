@@ -14,4 +14,11 @@ def rotate(image):
 
 
 def resize(image, x, y):
-    return cv2.resize(image, (x, y), interpolation=cv2.INTER_CUBIC)
+    width, height = len(image[0]), len(image)
+    img = image
+    if width > height:
+        img = image[:, int(width / 2 - height / 2):int(width / 2 + height / 2)]
+    elif width < height:
+        img = image[int(height / 2 - width / 2):int(height / 2 + width / 2), :]
+
+    return cv2.resize(img, (x, y), interpolation=cv2.INTER_CUBIC)
