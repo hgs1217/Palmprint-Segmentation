@@ -51,7 +51,7 @@ def seg(img):
     return res
 
 
-def test():
+def local():
     for i in range(4, 9):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         res = seg(img)
@@ -59,6 +59,10 @@ def test():
 
 
 def main():
+    for parent, dirnames, filenames in os.walk(OUTPUT_DIR):
+        if len(filenames) > 0:
+            print("DIR NOT EMPTY!")
+            return
     for parent, dirnames, filenames in os.walk(INPUT_DIR):
         for filename in filenames:
             if filename.split(".")[-1] == "jpg":
@@ -66,8 +70,8 @@ def main():
                 print(total_name)
                 img = cv2.imread(total_name, cv2.IMREAD_GRAYSCALE)
                 res = seg(img)
-                resize_raw = resize(img, 227, 227)
-                resize_output = resize(res, 227, 227)
+                resize_raw = resize(img, 256, 256)
+                _, resize_output = cv2.threshold(resize(res, 256, 256), 125, 255, cv2.THRESH_BINARY)
                 cv2.imwrite("%s/%s" % (OUTPUT_DIR, filename), resize_output)
                 cv2.imwrite("%s/%s" % (RESIZE_DIR, filename), resize_raw)
 

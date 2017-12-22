@@ -79,7 +79,9 @@ def get_roi(img):
 
 
 if __name__ == '__main__':
-    for i in range(5, 9):
-        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
-        res = get_roi(img)
-        cv2.imwrite("pics/roi{}.jpg".format(i), res)
+    a = np.zeros((7,7))
+    cv2.imwrite("D:/tt.jpg", a)
+    # for i in range(5, 9):
+    #     img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+    #     res = get_roi(img)
+    #     cv2.imwrite("pics/roi{}.jpg".format(i), res)
