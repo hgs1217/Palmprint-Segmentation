@@ -6,7 +6,7 @@ import numpy as np
 import math
 
 
-def angToRad(angle):
+def ang_to_rad(angle):
     return angle / 180 * math.pi
 
 
