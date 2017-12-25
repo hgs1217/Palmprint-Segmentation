@@ -156,9 +156,6 @@ class VGG16:
             self.softmax = tf.nn.softmax(self.logits)
             self.classes = tf.argmax(self.softmax, axis=3)
 
-    def set_label(self, label):
-        pass
-
     def load_img(self, path_list, label_flag):
         if label_flag:
             images = []
@@ -216,7 +213,7 @@ class VGG16:
                                                 feed_dict={self.x: batch_xs, self.y: batch_ys,
                                                            self.keep_prob: self.keep_pb, self.width: len(batch_ys)})
                 print("train %d, loss %g, accu %g" % (i, loss_batch, accu))
-                if i % 5 == 0:
+                if i % 5 == 4:
                     total = 1
                     train_loss, train_accu = np.zeros(total), np.zeros(total)
                     for j in range(total):

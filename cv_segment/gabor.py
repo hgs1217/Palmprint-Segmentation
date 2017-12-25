@@ -37,7 +37,7 @@ def get_gabor(img):
 
 
 if __name__ == '__main__':
-    for i in range(7, 8):
+    for i in range(5, 6):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         res = get_gabor(img)
         for j in range(len(res)):

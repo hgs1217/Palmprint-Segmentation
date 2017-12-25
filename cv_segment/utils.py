@@ -2,6 +2,7 @@
 # @Create Date: 2017/12/3
 
 import cv2
+import numpy as np
 
 
 # maybe not correct
@@ -22,3 +23,12 @@ def resize(image, x, y):
         img = image[int(height / 2 - width / 2):int(height / 2 + width / 2), :]
 
     return cv2.resize(img, (x, y), interpolation=cv2.INTER_CUBIC)
+
+
+def enhance_contrast(image):
+    hist, bins = np.histogram(image.flatten(), 256, [0, 256])
+    cdf = hist.cumsum()
+    cdf_m = np.ma.masked_equal(cdf, 0)
+    cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
+    cdf = np.ma.filled(cdf_m, 0).astype('uint8')
+    return cv2.LUT(image, cdf)
