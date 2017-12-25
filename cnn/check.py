@@ -9,7 +9,7 @@ import os
 from config import OUTPUT_DIR, RESIZE_DIR
 
 NET_PATH = 'D:/Computer Science/dataset/palmprint/'
-IMG_PATH = "D:/Computer Science/dataset/palmprint/small_raw/0005_m_l_02.jpg"
+IMG_PATH = "D:/Computer Science/dataset/palmprint/con_raw/0005_m_l_02.jpg"
 
 
 def main(path):
@@ -21,7 +21,7 @@ def main(path):
         raws_total = ["%s/%s" % (RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
-    raws = raws_total[16]
+    raws = raws_total[16:17]
     labels = labels_total[16:32]
 
     ckpt = tf.train.get_checkpoint_state(path)
@@ -41,12 +41,11 @@ def main(path):
         sess.run(tf.global_variables_initializer())
         saver.restore(sess, ckpt.model_checkpoint_path)
 
-        img_gray = sess.run(tf.image.convert_image_dtype(tf.image.decode_jpeg(
-            tf.read_file(IMG_PATH), channels=1), dtype=tf.uint8))
-        img = tf.reshape(img_gray, [-1, 128, 128, 1]).eval()
+        img = tf.stack([tf.image.convert_image_dtype(tf.image.decode_jpeg(
+            tf.read_file(p), channels=1), dtype=tf.uint8) for p in raws]).eval()
 
         result = sess.run(y, feed_dict={x: img, is_training: True,
-                                        width: 1})
+                                        width: len(img)})
         print(result[0])
         out = np.array(result[0]) * 255
 

@@ -3,15 +3,17 @@
 
 import cv2
 import numpy as np
+import math
 
 
-# maybe not correct
-def rotate(image):
-    height, width = len(image), len(image[0])
-    rot = cv2.getRotationMatrix2D((width / 2, height / 2), 90, 1)
-    rot[0, 2] += (height - width) / 2
-    rot[1, 2] += (width - height) / 2
-    return cv2.warpAffine(image, rot, (height, width), borderValue=(255, 255, 255))
+def angToRad(angle):
+    return angle / 180 * math.pi
+
+
+def rotate(image, angle):
+    height, width = image.shape[:2]
+    rot = cv2.getRotationMatrix2D((width / 2, height / 2), angle, 1)
+    return cv2.warpAffine(image, rot, (width, height))
 
 
 def resize(image, x, y):

@@ -136,11 +136,16 @@ class SegNet:
         self.classes = None
         self.loss = None
 
-        self.x = tf.placeholder(tf.float32, shape=[None, self.input_size, self.input_size, 1], name="input_x")
+        self.x = tf.placeholder(tf.float32, shape=[None, self.input_size, self.input_size, 1],
+                                name="input_x")
         self.y = tf.placeholder(tf.float32, shape=[None, self.input_size, self.input_size, 1],
                                 name="input_y")
-        self.is_training = tf.placeholder(tf.bool, name='is_training')
+        self.is_training = tf.placeholder(tf.bool, name="is_training")
         self.width = tf.placeholder(tf.int32, name="width")
+        self.global_step = tf.Variable(0, trainable=False)
+
+        self.check_x = tf.placeholder(tf.float32, shape=[1, self.input_size, self.input_size, 1], name="check_x")
+        self.check_y = tf.placeholder(tf.float32, shape=[1, self.input_size, self.input_size, 1], name="check_y")
 
     def build_network(self, images, labels, batch_size, is_training):
         x_resh = tf.reshape(images, [-1, self.input_size, self.input_size, 1])
@@ -205,27 +210,21 @@ class SegNet:
 
     def load_img(self, path_list, label_flag):
         if label_flag:
-            return [tf.round(tf.image.convert_image_dtype(tf.image.decode_jpeg(
-                tf.read_file(path), channels=1), dtype=tf.uint8)).eval() / 255 for path in path_list]
-            # images = []
-            # for path in path_list:
-            #     bi_img = tf.round(tf.image.convert_image_dtype(tf.image.decode_jpeg(
-            #         tf.read_file(path), channels=1), dtype=tf.uint8) / 255)
-            #     images.append(tf.concat([1 - bi_img, bi_img], -1).eval())
-            # return images
-        return [tf.image.convert_image_dtype(tf.image.decode_jpeg(
-            tf.read_file(path), channels=1), dtype=tf.uint8).eval() for path in path_list]
+            return tf.stack([np.round(tf.image.convert_image_dtype(tf.image.decode_jpeg(
+                tf.read_file(path), channels=1), dtype=tf.uint8).eval() / 255) for path in path_list]).eval()
+        return tf.stack([tf.image.convert_image_dtype(tf.image.decode_jpeg(
+            tf.read_file(path), channels=1), dtype=tf.uint8).eval() for path in path_list]).eval()
 
     def batch_generator(self):
-        # rand_num = [0]
+        # rand_num = range(0, self.batch_size)
         rand_num = random.sample(range(len(self.raws)), self.batch_size)
         batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
         return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
     def test_generator(self, i):
         isize = self.batch_size
-        raws_test, labels_test = self.test_raws[i * isize: i * isize + isize], \
-                                 self.test_labels[i * isize: i * isize + isize]
+        raws_test = self.test_raws[i * isize: i * isize + isize]
+        labels_test = self.test_labels[i * isize: i * isize + isize]
         return self.load_img(raws_test, False), self.load_img(labels_test, True)
 
     def train_network(self, is_finetune=False):
@@ -233,10 +232,8 @@ class SegNet:
         config.gpu_options.allow_growth = True
 
         with tf.Session(config=config) as sess:
-            global_step = tf.Variable(0, trainable=False)
-
             loss, eval_prediction, classes = self.build_network(self.x, self.y, self.width, self.is_training)
-            train_op = self.train_set(loss, global_step)
+            train_op = self.train_set(loss, self.global_step)
 
             tf.add_to_collection('result', classes)
             saver = tf.train.Saver(tf.global_variables())
@@ -250,7 +247,7 @@ class SegNet:
             for i in range(self.epoch_size):
                 batch_xs, batch_ys = self.batch_generator()
                 feed_dict = {self.x: batch_xs, self.y: batch_ys, self.is_training: True,
-                             self.width: len(batch_xs)}
+                             self.width: self.batch_size}
 
                 start_time = time.time()
                 loss_batch, eval_pre, _ = sess.run([loss, eval_prediction, train_op], feed_dict=feed_dict)
@@ -269,7 +266,7 @@ class SegNet:
                             self.x: x_test,
                             self.y: y_test,
                             self.is_training: True,
-                            self.width: len(x_test)
+                            self.width: self.batch_size
                         })
                         total_val_loss += loss_test
                         hist += get_hist(eval_pre, y_test)
@@ -279,28 +276,36 @@ class SegNet:
 
                     if loss_batch < min_loss:
                         min_loss = loss_batch
-                        print("saving model....\n")
+                        print("saving model.....")
                         saver.save(sess, CKPT_PATH)
+                        print("end saving....\n")
 
     def check(self):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
 
         with tf.Session(config=config) as sess:
-            global_step = tf.Variable(0, trainable=False)
-
             loss, eval_prediction, classes = self.build_network(self.x, self.y, self.width, self.is_training)
-            train_op = self.train_set(loss, global_step)
+            train_op = self.train_set(loss, self.global_step)
 
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, CKPT_PATH)
 
             batch_xs, batch_ys = self.batch_generator()
             feed_dict = {self.x: batch_xs, self.y: batch_ys, self.is_training: True,
-                         self.width: len(batch_xs)}
+                         self.width: self.batch_size}
 
             loss_batch, eval_pre, res, _ = sess.run([loss, eval_prediction, classes, train_op], feed_dict=feed_dict)
             per_class_acc(eval_pre, batch_ys)
 
+        print(batch_ys[0].shape)
+        c = np.zeros((128, 128), dtype=np.uint8)
+        for i in range(128):
+            for j in range(128):
+                c[i, j] = batch_ys[0][i][j]
+
+        print(c[0:20, 0:20])
+        print(res[0].shape)
+        print(res[0][0:20, 0:20])
         out = np.array(res[0]) * 255
         cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res2.jpg", out)

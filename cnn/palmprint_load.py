@@ -19,12 +19,12 @@ def main():
         raws_total = ["%s/%s" % (CON_RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
-    # raws, raws_test = raws_total[:-1000], raws_total[-1000:]
-    # labels, labels_test = labels_total[:-1000], labels_total[-1000:]
-    raws, raws_test = raws_total[:-16], raws_total[-16:]
-    labels, labels_test = labels_total[:-16], labels_total[-16:]
+    raws, raws_test = raws_total[:-16], raws_total[-20:]
+    labels, labels_test = labels_total[:-16], labels_total[-20:]
+    # raws, raws_test = raws_total[16:32], raws_total[-16:]
+    # labels, labels_test = labels_total[16:32], labels_total[-16:]
 
-    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=20, epoch_size=2000, input_size=128)
+    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=20, epoch_size=50, input_size=128)
     segnet.train_network(True)
     # segnet.check()
 
