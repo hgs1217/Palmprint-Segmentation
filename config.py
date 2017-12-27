@@ -3,6 +3,8 @@
 
 CKPT_PATH = 'D:/Computer Science/dataset/palmprint/palmprint.ckpt'
 
+TEST_DIR = "D:/Computer Science/dataset/palmprint/test_raw"
+
 INPUT_DIR = "D:/Computer Science/dataset/palmprint/con_r"
 OUTPUT_DIR = "D:/Computer Science/dataset/palmprint/small_output"
 RESIZE_DIR = "D:/Computer Science/dataset/palmprint/small_raw"

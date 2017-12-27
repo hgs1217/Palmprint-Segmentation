@@ -69,7 +69,7 @@ def per_class_acc(predictions, label_tensor):
     print("")
 
 
-def print_hist_summery(hist):
+def print_hist_summary(hist):
     acc_total = np.diag(hist).sum() / hist.sum()
     iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
     print('\taccuracy = %f\t\tmean IU  = %f' % (np.nanmean(acc_total), np.nanmean(iu)))

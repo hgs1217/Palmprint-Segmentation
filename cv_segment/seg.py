@@ -7,7 +7,7 @@
 import cv2
 import os
 from cv_segment.utils import resize
-from config import INPUT_DIR, OUTPUT_DIR, RESIZE_DIR, CON_RESIZE_DIR, CON_OUTPUT_DIR
+from config import INPUT_DIR, OUTPUT_DIR, RESIZE_DIR, CON_RESIZE_DIR, CON_OUTPUT_DIR, TEST_DIR
 
 
 def laplace(img):
@@ -80,8 +80,23 @@ def smaller(image):
     return image[int(height / 4):int(height / 4 * 3), int(width / 4):int(width / 4 * 3)]
 
 
+def keep_ori():
+    for parent, dirnames, filenames in os.walk(RESIZE_DIR):
+        if len(filenames) > 0:
+            print("DIR NOT EMPTY!")
+            return
+    for parent, dirnames, filenames in os.walk(TEST_DIR):
+        for filename in filenames:
+            if filename.split(".")[-1] == "jpg":
+                total_name = os.path.join(parent, filename).replace("\\", "/")
+                print(total_name)
+                img = cv2.imread(total_name, cv2.IMREAD_GRAYSCALE)
+                resize_raw = resize(img, 256, 256)
+                cv2.imwrite("%s/%s" % (RESIZE_DIR, filename), smaller(resize_raw))
+
+
 def main():
-    for parent, dirnames, filenames in os.walk(CON_OUTPUT_DIR):
+    for parent, dirnames, filenames in os.walk(OUTPUT_DIR):
         if len(filenames) > 0:
             print("DIR NOT EMPTY!")
             return
@@ -95,10 +110,15 @@ def main():
                 res = canny_contrast(img)
                 resize_raw = resize(img, 256, 256)
                 _, resize_output = cv2.threshold(resize(res, 256, 256), 125, 255, cv2.THRESH_BINARY)
-                cv2.imwrite("%s/%s" % (CON_OUTPUT_DIR, filename), smaller(resize_output))
-                cv2.imwrite("%s/%s" % (CON_RESIZE_DIR, filename), smaller(resize_raw))
+                cv2.imwrite("%s/%s" % (OUTPUT_DIR, filename), smaller(resize_output))
+                # cv2.imwrite("%s/%s" % (RESIZE_DIR, filename), smaller(resize_raw))
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    # keep_ori()
     # local()
+    img = cv2.imread("pics/test2.jpg", cv2.IMREAD_GRAYSCALE)
+    img = cv2.GaussianBlur(img, (3, 3), 0)
+    res = cv2.Canny(img, 50, 50)
+    cv2.imwrite("pics/canny2.jpg", res)

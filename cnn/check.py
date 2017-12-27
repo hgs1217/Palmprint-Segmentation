@@ -21,7 +21,7 @@ def main(path):
         raws_total = ["%s/%s" % (RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
-    raws = raws_total[16:17]
+    raws = raws_total[16:36]
     labels = labels_total[16:32]
 
     ckpt = tf.train.get_checkpoint_state(path)
@@ -41,15 +41,19 @@ def main(path):
         sess.run(tf.global_variables_initializer())
         saver.restore(sess, ckpt.model_checkpoint_path)
 
-        img = tf.stack([tf.image.convert_image_dtype(tf.image.decode_jpeg(
-            tf.read_file(p), channels=1), dtype=tf.uint8) for p in raws]).eval()
+        # img = tf.stack([tf.image.convert_image_dtype(tf.image.decode_jpeg(
+        #     tf.read_file(p), channels=1), dtype=tf.uint8) for p in raws]).eval()
 
-        result = sess.run(y, feed_dict={x: img, is_training: True,
-                                        width: len(img)})
-        print(result[0])
+        x_input = np.zeros((20, 128, 128, 1))
+        x_input[0] = tf.image.convert_image_dtype(tf.image.decode_jpeg(
+            tf.read_file(IMG_PATH), channels=1), dtype=tf.uint8).eval()
+
+        result = sess.run(y, feed_dict={x: x_input, is_training: False,
+                                        width: 20})
+        print(result[0][0:20, 0:20])
         out = np.array(result[0]) * 255
 
-    cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res3.jpg", out)
+    cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res4.jpg", out)
 
 if __name__ == '__main__':
     main(NET_PATH)

@@ -11,7 +11,7 @@ import math
 import time
 import cv2
 from cnn.network_utils import variable_with_weight_decay, add_loss_summaries, per_class_acc, get_hist, \
-    print_hist_summery
+    print_hist_summary
 from config import CKPT_PATH
 
 
@@ -112,7 +112,7 @@ def norm_layer(x, lsize, bias=1.0, alpha=1e-4, beta=0.75, name=None):
 
 class SegNet:
     def __init__(self, raws, labels, test_raws, test_labels, input_size=256, keep_pb=0.5, num_classes=2,
-                 batch_size=100, epoch_size=100, learning_rate=0.001):
+                 batch_size=1, epoch_size=100, learning_rate=0.001):
         """
         :param raws: path list of raw images
         :param labels: path list of labels
@@ -148,9 +148,7 @@ class SegNet:
         self.check_y = tf.placeholder(tf.float32, shape=[1, self.input_size, self.input_size, 1], name="check_y")
 
     def build_network(self, images, labels, batch_size, is_training):
-        x_resh = tf.reshape(images, [-1, self.input_size, self.input_size, 1])
-
-        norm1 = norm_layer(x_resh, 5, name="norm1")
+        norm1 = norm_layer(images, 5, name="norm1")
         conv1 = conv_layer(norm1, 7, 1, 64, is_training, "conv1")
         pool1, pool1_indices = max_pool_layer(conv1, 2, 2, "pool1")
 
@@ -187,7 +185,7 @@ class SegNet:
 
         logits = conv_classifier
         loss = weighted_loss(conv_classifier, labels, self.num_classes)
-        classes = tf.argmax(logits, axis=3)
+        classes = tf.argmax(logits, axis=-1)
 
         return loss, logits, classes
 
@@ -216,7 +214,6 @@ class SegNet:
             tf.read_file(path), channels=1), dtype=tf.uint8).eval() for path in path_list]).eval()
 
     def batch_generator(self):
-        # rand_num = range(0, self.batch_size)
         rand_num = random.sample(range(len(self.raws)), self.batch_size)
         batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
         return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
@@ -226,6 +223,13 @@ class SegNet:
         raws_test = self.test_raws[i * isize: i * isize + isize]
         labels_test = self.test_labels[i * isize: i * isize + isize]
         return self.load_img(raws_test, False), self.load_img(labels_test, True)
+
+    def check_generator(self):
+        batch_raws, batch_labels = [self.raws[i] for i in range(self.batch_size)], \
+                                   [self.labels[i] for i in range(self.batch_size)]
+        # rand_num = [0]
+        # batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
+        return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
     def train_network(self, is_finetune=False):
         config = tf.ConfigProto()
@@ -244,18 +248,20 @@ class SegNet:
                 sess.run(tf.global_variables_initializer())
 
             min_loss = 9999
-            for i in range(self.epoch_size):
+            loss_iter = 0
+            for step in range(self.epoch_size):
                 batch_xs, batch_ys = self.batch_generator()
-                feed_dict = {self.x: batch_xs, self.y: batch_ys, self.is_training: True,
-                             self.width: self.batch_size}
+                feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: self.batch_size,
+                             self.is_training: True}
 
                 start_time = time.time()
                 loss_batch, eval_pre, _ = sess.run([loss, eval_prediction, train_op], feed_dict=feed_dict)
                 duration = time.time() - start_time
-                print("train %d, loss %g, duration %.3f" % (i, loss_batch, duration))
+                print("train %d, loss %g, duration %.3f" % (step, loss_batch, duration))
                 per_class_acc(eval_pre, batch_ys)
+                loss_iter += loss_batch / 10
 
-                if i % 10 == 9:
+                if step % 10 == 9:
                     print("\nstart validating.....")
                     total_val_loss = 0.0
                     hist = np.zeros((self.num_classes, self.num_classes))
@@ -265,20 +271,22 @@ class SegNet:
                         loss_test, eval_pre = sess.run([loss, eval_prediction], feed_dict={
                             self.x: x_test,
                             self.y: y_test,
-                            self.is_training: True,
-                            self.width: self.batch_size
+                            self.width: self.batch_size,
+                            self.is_training: True
                         })
                         total_val_loss += loss_test
                         hist += get_hist(eval_pre, y_test)
                     print("val loss: ", total_val_loss / test_iter)
-                    print_hist_summery(hist)
+                    print_hist_summary(hist)
                     print("end validating....\n")
 
-                    if loss_batch < min_loss:
-                        min_loss = loss_batch
+                    print("last 10 average loss: %g\n" % loss_iter)
+                    if loss_iter < min_loss:
+                        min_loss = loss_iter
                         print("saving model.....")
                         saver.save(sess, CKPT_PATH)
                         print("end saving....\n")
+                    loss_iter = 0
 
     def check(self):
         config = tf.ConfigProto()
@@ -286,17 +294,17 @@ class SegNet:
 
         with tf.Session(config=config) as sess:
             loss, eval_prediction, classes = self.build_network(self.x, self.y, self.width, self.is_training)
-            train_op = self.train_set(loss, self.global_step)
 
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, CKPT_PATH)
 
-            batch_xs, batch_ys = self.batch_generator()
-            feed_dict = {self.x: batch_xs, self.y: batch_ys, self.is_training: True,
-                         self.width: self.batch_size}
+            batch_xs, batch_ys = self.check_generator()
+            feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: 20, self.is_training: True}
 
-            loss_batch, eval_pre, res, _ = sess.run([loss, eval_prediction, classes, train_op], feed_dict=feed_dict)
+            loss_batch, eval_pre, res = sess.run([loss, eval_prediction, classes], feed_dict=feed_dict)
             per_class_acc(eval_pre, batch_ys)
+
+            # batch_ys = sess.run(tf.argmax(batch_ys, axis=-1))
 
         print(batch_ys[0].shape)
         c = np.zeros((128, 128), dtype=np.uint8)
