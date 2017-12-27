@@ -5,10 +5,6 @@ import cv2
 import numpy as np
 
 
-MIN_VAL = 7
-MAX_VAL = 20
-
-
 def skin_otsu(img):
     img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     img_cr = cv2.split(img_ycrcb)[1]

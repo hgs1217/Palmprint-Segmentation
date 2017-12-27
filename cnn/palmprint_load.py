@@ -25,7 +25,7 @@ def main():
     # labels, labels_test = labels_total[16:36], labels_total[-20:]
 
     # segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=20, epoch_size=60, input_size=128)
-    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=1, epoch_size=1000, input_size=128)
+    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=1, epoch_size=600, input_size=128)
     segnet.train_network(True)
     # segnet.check()
 

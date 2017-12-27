@@ -288,6 +288,10 @@ class SegNet:
                         print("end saving....\n")
                     loss_iter = 0
 
+            print("saving model.....")
+            saver.save(sess, CKPT_PATH)
+            print("end saving....\n")
+
     def check(self):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
