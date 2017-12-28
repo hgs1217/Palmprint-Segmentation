@@ -19,13 +19,17 @@ def main():
         raws_total = ["%s/%s" % (RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
-    raws, raws_test = raws_total[:-16], raws_total[-20:]
-    labels, labels_test = labels_total[:-16], labels_total[-20:]
-    # raws, raws_test = raws_total[16:36], raws_total[-20:]
-    # labels, labels_test = labels_total[16:36], labels_total[-20:]
+    total = list(range(64))
+    raws_items = list(filter(lambda x: x % 8 != 6 and x % 8 != 7, total))
+    test_items = list(set(total) ^ set(raws_items))
+
+    raws, raws_test = [raws_total[i] for i in raws_items], [raws_total[i] for i in test_items]
+    labels, labels_test = [labels_total[i] for i in raws_items], [labels_total[i] for i in test_items]
+    # raws, raws_test = raws_total[:-16], raws_total[-16:]
+    # labels, labels_test = labels_total[:-16], labels_total[-16:]
 
     # segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=20, epoch_size=60, input_size=128)
-    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=1, epoch_size=600, input_size=128)
+    segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=1, epoch_size=1000, input_size=128)
     segnet.train_network(True)
     # segnet.check()
 

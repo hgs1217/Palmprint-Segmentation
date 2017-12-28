@@ -2,6 +2,7 @@
 # @Create Date: 2017/12/20
 
 CKPT_PATH = 'D:/Computer Science/dataset/palmprint/palmprint.ckpt'
+LOG_PATH = "D:/Computer Science/dataset/palmprint/logs"
 
 TEST_DIR = "D:/Computer Science/dataset/palmprint/test_raw"
 

@@ -35,7 +35,14 @@ def add_loss_summaries(total_loss):
     loss_averages_op: op for generating moving averages of losses.
     """
     loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
-    return loss_averages.apply(tf.get_collection('losses') + [total_loss])
+    losses = tf.get_collection('losses')
+    loss_averages_op = loss_averages.apply(losses + [total_loss])
+
+    for l in losses + [total_loss]:
+        tf.summary.scalar(l.op.name + ' (raw)', l)
+        tf.summary.scalar(l.op.name, loss_averages.average(l))
+
+    return loss_averages_op
 
 
 def get_hist(predictions, labels):

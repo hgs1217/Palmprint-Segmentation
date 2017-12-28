@@ -48,7 +48,7 @@ def main(path):
         x_input[0] = tf.image.convert_image_dtype(tf.image.decode_jpeg(
             tf.read_file(IMG_PATH), channels=1), dtype=tf.uint8).eval()
 
-        result = sess.run(y, feed_dict={x: x_input, is_training: False,
+        result = sess.run(y, feed_dict={x: x_input, is_training: True,
                                         width: 1})
         print(result[0][0:20, 0:20])
         out = np.array(result[0]) * 255

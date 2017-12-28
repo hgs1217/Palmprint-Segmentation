@@ -12,7 +12,7 @@ import time
 import cv2
 from cnn.network_utils import variable_with_weight_decay, add_loss_summaries, per_class_acc, get_hist, \
     print_hist_summary
-from config import CKPT_PATH, LOG_PATH
+from config import CKPT_PATH
 
 
 def msra_initializer(ksize, filter_num):
@@ -147,76 +147,43 @@ class SegNet:
 
     def build_network(self, images, labels, batch_size, is_training):
         norm1 = norm_layer(images, 5, name="norm1")
-        conv1_1 = conv_layer(norm1, 3, 1, 64, is_training, "conv1_1")
-        conv1_2 = conv_layer(conv1_1, 3, 1, 64, is_training, "conv1_2")
-        pool1, pool1_indices = max_pool_layer(conv1_2, 2, 2, "pool1")
+        conv1 = conv_layer(norm1, 7, 1, 64, is_training, "conv1")
+        pool1, pool1_indices = max_pool_layer(conv1, 2, 2, "pool1")
 
-        conv2_1 = conv_layer(pool1, 3, 1, 128, is_training, "conv2_1")
-        conv2_2 = conv_layer(conv2_1, 3, 1, 128, is_training, "conv2_2")
-        pool2, pool2_indices = max_pool_layer(conv2_2, 2, 2, "pool2")
+        conv2 = conv_layer(pool1, 7, 1, 64, is_training, "conv2")
+        pool2, pool2_indices = max_pool_layer(conv2, 2, 2, "pool2")
 
-        conv3_1 = conv_layer(pool2, 3, 1, 256, is_training, "conv3_1")
-        conv3_2 = conv_layer(conv3_1, 3, 1, 256, is_training, "conv3_2")
-        conv3_3 = conv_layer(conv3_2, 3, 1, 256, is_training, "conv3_3")
-        pool3, pool3_indices = max_pool_layer(conv3_3, 2, 2, "pool3")
+        conv3 = conv_layer(pool2, 7, 1, 64, is_training, "conv3")
+        pool3, pool3_indices = max_pool_layer(conv3, 2, 2, "pool3")
         encdrop3 = tf.nn.dropout(pool3, self.keep_prob, name="encdrop3")
 
-        conv4_1 = conv_layer(encdrop3, 3, 1, 512, is_training, "conv4_1")
-        conv4_2 = conv_layer(conv4_1, 3, 1, 512, is_training, "conv4_2")
-        conv4_3 = conv_layer(conv4_2, 3, 1, 512, is_training, "conv4_3")
-        pool4, pool4_indices = max_pool_layer(conv4_3, 2, 2, "pool4")
+        conv4 = conv_layer(encdrop3, 7, 1, 64, is_training, "conv4")
+        pool4, pool4_indices = max_pool_layer(conv4, 2, 2, "pool4")
         encdrop4 = tf.nn.dropout(pool4, self.keep_prob, name="encdrop4")
 
-        # conv5_1 = conv_layer(encdrop4, 3, 1, 512, is_training, "conv5_1")
-        # conv5_2 = conv_layer(conv5_1, 3, 1, 512, is_training, "conv5_2")
-        # conv5_3 = conv_layer(conv5_2, 3, 1, 512, is_training, "conv5_3")
-        # pool5, pool5_indices = max_pool_layer(conv5_3, 2, 2, "pool5")
-        # encdrop5 = tf.nn.dropout(pool5, self.keep_prob, name="encdrop5")
-        #
-        # upsample5 = deconv_layer(encdrop5, 2, 512, [batch_size, 8, 8, 512], name="upsample5")
-        # conv_decode5_3 = conv_layer(upsample5, 3, 1, 512, is_training, "conv_decode5_3", relu_flag=False,
-        #                           in_channel=512)
-        # conv_decode5_2 = conv_layer(conv_decode5_3, 3, 1, 512, is_training, "conv_decode5_2", relu_flag=False,
-        #                             in_channel=512)
-        # conv_decode5_1 = conv_layer(conv_decode5_2, 3, 1, 512, is_training, "conv_decode5_1", relu_flag=False,
-        #                             in_channel=512)
-        # decdrop5 = tf.nn.dropout(conv_decode5_1, self.keep_prob, name="decdrop5")
-
-        upsample4 = deconv_layer(encdrop4, 2, 512, [batch_size, 16, 16, 512], name="upsample4")
-        conv_decode4_3 = conv_layer(upsample4, 3, 1, 512, is_training, "conv_decode4_3", relu_flag=False,
-                                  in_channel=512)
-        conv_decode4_2 = conv_layer(conv_decode4_3, 3, 1, 512, is_training, "conv_decode4_2", relu_flag=False,
-                                    in_channel=512)
-        conv_decode4_1 = conv_layer(conv_decode4_2, 3, 1, 256, is_training, "conv_decode4_1", relu_flag=False,
-                                    in_channel=512)
-        decdrop4 = tf.nn.dropout(conv_decode4_1, self.keep_prob, name="decdrop4")
-
-        upsample3 = deconv_layer(decdrop4, 2, 256, [batch_size, 32, 32, 256], name="upsample3")
-        conv_decode3_3 = conv_layer(upsample3, 3, 1, 256, is_training, "conv_decode3_3", relu_flag=False,
-                                  in_channel=256)
-        conv_decode3_2 = conv_layer(conv_decode3_3, 3, 1, 256, is_training, "conv_decode3_2", relu_flag=False,
-                                    in_channel=256)
-        conv_decode3_1 = conv_layer(conv_decode3_2, 3, 1, 128, is_training, "conv_decode3_1", relu_flag=False,
-                                    in_channel=256)
-        decdrop3 = tf.nn.dropout(conv_decode3_1, self.keep_prob, name="decdrop3")
-
-        upsample2 = deconv_layer(decdrop3, 2, 128, [batch_size, 64, 64, 128], name="upsample2")
-        conv_decode2_2 = conv_layer(upsample2, 3, 1, 128, is_training, "conv_decode2_2", relu_flag=False,
-                                  in_channel=128)
-        conv_decode2_1 = conv_layer(conv_decode2_2, 3, 1, 64, is_training, "conv_decode2_1", relu_flag=False,
-                                    in_channel=128)
-
-        upsample1 = deconv_layer(conv_decode2_1, 2, 64, [batch_size, 128, 128, 64], name="upsample1")
-        conv_decode1_2 = conv_layer(upsample1, 3, 1, 64, is_training, "conv_decode1_2", relu_flag=False,
+        upsample4 = deconv_layer(encdrop4, 2, 64, [batch_size, 16, 16, 64], name="upsample4")
+        conv_decode4 = conv_layer(upsample4, 7, 1, 64, is_training, "conv_decode4", relu_flag=False,
                                   in_channel=64)
-        conv_decode1_1 = conv_layer(conv_decode1_2, 3, 1, 64, is_training, "conv_decode1_1", relu_flag=False,
-                                    in_channel=64)
+        decdrop4 = tf.nn.dropout(conv_decode4, self.keep_prob, name="decdrop4")
+
+        upsample3 = deconv_layer(decdrop4, 2, 64, [batch_size, 32, 32, 64], name="upsample3")
+        conv_decode3 = conv_layer(upsample3, 7, 1, 64, is_training, "conv_decode3", relu_flag=False,
+                                  in_channel=64)
+        decdrop3 = tf.nn.dropout(conv_decode3, self.keep_prob, name="decdrop3")
+
+        upsample2 = deconv_layer(decdrop3, 2, 64, [batch_size, 64, 64, 64], name="upsample2")
+        conv_decode2 = conv_layer(upsample2, 7, 1, 64, is_training, "conv_decode2", relu_flag=False,
+                                  in_channel=64)
+
+        upsample1 = deconv_layer(conv_decode2, 2, 64, [batch_size, 128, 128, 64], name="upsample1")
+        conv_decode1 = conv_layer(upsample1, 7, 1, 64, is_training, "conv_decode1", relu_flag=False,
+                                  in_channel=64)
 
         with tf.variable_scope('conv_classifier') as scope:
             w = variable_with_weight_decay('w', shape=[1, 1, 64, self.num_classes],
                                            initializer=msra_initializer(1, 64), wd=0.0005)
             b = tf.get_variable("b", [self.num_classes], initializer=tf.constant_initializer(0.0))
-            conv_classifier = tf.nn.bias_add(conv2d(conv_decode1_1, w, 1), b, name=scope.name)
+            conv_classifier = tf.nn.bias_add(conv2d(conv_decode1, w, 1), b, name=scope.name)
 
         logits = conv_classifier
         loss = weighted_loss(conv_classifier, labels, self.num_classes)
@@ -232,13 +199,6 @@ class SegNet:
             grads = opt.compute_gradients(total_loss)
 
         apply_gradient_op = opt.apply_gradients(grads, global_step=global_step)
-
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.op.name, var)
-
-        for grad, var in grads:
-            if grad is not None:
-                tf.summary.histogram(var.op.name + '/gradients', grad)
 
         variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
         variables_averages_op = variable_averages.apply(tf.trainable_variables())
@@ -284,24 +244,14 @@ class SegNet:
             tf.add_to_collection('result', classes)
             saver = tf.train.Saver(tf.global_variables())
 
-            summary_op = tf.summary.merge_all()
-
             if (is_finetune):
                 saver.restore(sess, CKPT_PATH)
             else:
                 sess.run(tf.global_variables_initializer())
 
-            summary_writer = tf.summary.FileWriter(LOG_PATH, sess.graph)
-            average_pl = tf.placeholder(tf.float32)
-            acc_pl = tf.placeholder(tf.float32)
-            iu_pl = tf.placeholder(tf.float32)
-            average_summary = tf.summary.scalar("test_average_loss", average_pl)
-            acc_summary = tf.summary.scalar("test_accuracy", acc_pl)
-            iu_summary = tf.summary.scalar("Mean_IU", iu_pl)
-
             min_loss = 9999
             loss_iter = 0
-            vali_iter = 20
+            vali_iter = 10
             for step in range(self.epoch_size):
                 batch_xs, batch_ys = self.batch_generator()
                 feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: self.batch_size,
@@ -318,7 +268,7 @@ class SegNet:
                     print("\nstart validating.....")
                     total_val_loss = 0.0
                     hist = np.zeros((self.num_classes, self.num_classes))
-                    test_iter = 8
+                    test_iter = 1
                     for test_step in range(test_iter):
                         x_test, y_test = self.test_generator(test_step)
                         loss_test, eval_pre = sess.run([loss, eval_prediction], feed_dict={
@@ -331,19 +281,8 @@ class SegNet:
                         total_val_loss += loss_test
                         hist += get_hist(eval_pre, y_test)
                     print("val loss: ", total_val_loss / test_iter)
-                    acc_total = np.diag(hist).sum() / hist.sum()
-                    iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
-                    test_summary_str = sess.run(average_summary, feed_dict={average_pl: total_val_loss / test_iter})
-                    acc_summary_str = sess.run(acc_summary, feed_dict={acc_pl: acc_total})
-                    iu_summary_str = sess.run(iu_summary, feed_dict={iu_pl: np.nanmean(iu)})
                     print_hist_summary(hist)
                     print("end validating....\n")
-
-                    summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                    summary_writer.add_summary(summary_str, step)
-                    summary_writer.add_summary(test_summary_str, step)
-                    summary_writer.add_summary(acc_summary_str, step)
-                    summary_writer.add_summary(iu_summary_str, step)
 
                     print("last %d average loss: %g\n" % (vali_iter, loss_iter))
                     if loss_iter < min_loss:
