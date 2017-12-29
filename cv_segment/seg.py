@@ -56,8 +56,7 @@ def local():
     for i in range(4, 9):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         con = contrast(img)
-        # res = seg(con)
-        res = con
+        res = seg(con)
         cv2.imwrite("pics/canny{}.jpg".format(i), res)
 
 
@@ -83,7 +82,11 @@ def keep_ori():
 
 def contrast(img):
     mean = np.mean(img)
-    res = cv2.convertScaleAbs(img, alpha=3, beta=-mean * 2.8 - 50)
+    res = np.array(img, dtype=np.int16)
+    res = 3 * res - 2.8 * mean - 50
+    res = np.maximum(res, np.zeros(res.shape))
+    res = np.minimum(res, np.ones(res.shape) * 255)
+    res = np.array(res, dtype=np.uint8)
     return res
 
 

@@ -112,7 +112,7 @@ def norm_layer(x, lsize, bias=1.0, alpha=1e-4, beta=0.75, name=None):
 
 class SegNet:
     def __init__(self, raws, labels, test_raws, test_labels, input_size=256, keep_pb=0.5, num_classes=2,
-                 batch_size=1, epoch_size=100, learning_rate=0.001):
+                 batch_size=1, epoch_size=100, learning_rate=0.001, start_step=0):
         """
         :param raws: path list of raw images
         :param labels: path list of labels
@@ -135,6 +135,7 @@ class SegNet:
         self.softmax = None
         self.classes = None
         self.loss = None
+        self.start_step = start_step
 
         self.x = tf.placeholder(tf.float32, shape=[None, self.input_size, self.input_size, 1],
                                 name="input_x")
@@ -302,7 +303,7 @@ class SegNet:
             min_loss = 9999
             loss_iter = 0
             vali_iter = 20
-            for step in range(self.epoch_size):
+            for step in range(self.start_step, self.start_step + self.epoch_size):
                 batch_xs, batch_ys = self.batch_generator()
                 feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: self.batch_size,
                              self.is_training: True, self.keep_prob: self.keep_pb}
