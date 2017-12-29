@@ -269,7 +269,7 @@ class SegNet:
     def check_generator(self):
         batch_raws, batch_labels = [self.raws[i] for i in range(self.batch_size)], \
                                    [self.labels[i] for i in range(self.batch_size)]
-        # rand_num = [0]
+        # rand_num = [-1]
         # batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
         return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
