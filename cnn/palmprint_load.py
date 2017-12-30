@@ -19,19 +19,18 @@ def main():
         raws_total = ["%s/%s" % (CON_RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
-    total = list(range(64))
-    raws_items = list(filter(lambda x: x % 8 != 6 and x % 8 != 7, total))
+    total = list(range(len(raws_total)))
+    raws_items = list(filter(lambda x: x % 5 != 4, total))
     test_items = list(set(total) ^ set(raws_items))
 
     raws, raws_test = [raws_total[i] for i in raws_items], [raws_total[i] for i in test_items]
     labels, labels_test = [labels_total[i] for i in raws_items], [labels_total[i] for i in test_items]
-    # raws, raws_test = raws_total[:-16], raws_total[-16:]
-    # labels, labels_test = labels_total[:-16], labels_total[-16:]
 
-    # segnet = SegNet(raws, labels, raws_test, labels_test, batch_size=20, epoch_size=60, input_size=128)
-    segnet = SegNet(raws_test, labels_test, raws_test, labels_test, start_step=2800, batch_size=1, epoch_size=600, input_size=128)
-    # segnet.train_network(True)
-    segnet.check()
+    # raws = ["D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/canny1.jpg"]
+
+    segnet = SegNet(raws, labels, raws_test, labels_test, start_step=6000, batch_size=1, epoch_size=700, input_size=128)
+    segnet.train_network(True)
+    # segnet.check()
 
 
 if __name__ == '__main__':

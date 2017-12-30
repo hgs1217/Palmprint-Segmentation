@@ -8,7 +8,7 @@ import cv2
 import os
 import numpy as np
 from cv_segment.utils import resize
-from config import INPUT_DIR, OUTPUT_DIR, RESIZE_DIR, CON_RESIZE_DIR, CON_OUTPUT_DIR, TEST_DIR
+from config import INPUT_DIR, OUTPUT_DIR, RESIZE_DIR, CON_RESIZE_DIR, CON_OUTPUT_DIR, TEST_DIR, CON_INPUT_DIR
 
 
 def laplace(img):

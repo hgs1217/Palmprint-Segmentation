@@ -261,17 +261,19 @@ class SegNet:
         batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
         return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
-    def test_generator(self, i):
-        isize = self.batch_size
-        raws_test = self.test_raws[i * isize: i * isize + isize]
-        labels_test = self.test_labels[i * isize: i * isize + isize]
+    def test_generator(self):
+        rand_num = random.sample(range(len(self.test_raws)), self.batch_size)
+        raws_test, labels_test = [self.test_raws[i] for i in rand_num], [self.test_labels[i] for i in rand_num]
+        # isize = self.batch_size
+        # raws_test = self.test_raws[i * isize: i * isize + isize]
+        # labels_test = self.test_labels[i * isize: i * isize + isize]
         return self.load_img(raws_test, False), self.load_img(labels_test, True)
 
     def check_generator(self):
-        batch_raws, batch_labels = [self.raws[i] for i in range(self.batch_size)], \
-                                   [self.labels[i] for i in range(self.batch_size)]
-        # rand_num = [-1]
-        # batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
+        # batch_raws, batch_labels = [self.raws[i] for i in range(self.batch_size)], \
+        #                            [self.labels[i] for i in range(self.batch_size)]
+        rand_num = [-1]
+        batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
         return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
     def train_network(self, is_finetune=False):
@@ -321,7 +323,7 @@ class SegNet:
                     hist = np.zeros((self.num_classes, self.num_classes))
                     test_iter = 8
                     for test_step in range(test_iter):
-                        x_test, y_test = self.test_generator(test_step)
+                        x_test, y_test = self.test_generator()
                         loss_test, eval_pre = sess.run([loss, eval_prediction], feed_dict={
                             self.x: x_test,
                             self.y: y_test,
