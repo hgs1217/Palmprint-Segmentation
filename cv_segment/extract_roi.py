@@ -77,10 +77,15 @@ def find_center(img):
 
 
 def is_right_hand(img):
-    return False
+    h, w = img.shape[:2]
+    if np.sum(img[50, 0:w]) > np.sum(img[h - 50, 0:w]):
+        print("left hand detected.")
+        return False
+    else:
+        return True
 
 
-def extract_roi(src_ori):
+def _extract_roi(src_ori, i):
     # if not is_right_hand(src_ori):
     #     src_ori = cv2.flip(src_ori, 0)
 
@@ -98,7 +103,7 @@ def extract_roi(src_ori):
     rotated_binary = rotated_binary.astype(np.uint8)
 
     rotated_trans = cv2.distanceTransform(rotated_binary, cv2.DIST_L2, 5)
-    # cv2.imwrite(PATH + "rotated_trans.jpg", rotated_trans)
+    cv2.imwrite(PATH + "rotated_trans{}.jpg".format(i), rotated_trans)
     (cx, cy) = find_center(rotated_trans)
 
     _, rotated_trans_binary = cv2.threshold(rotated_trans, 55, 255, cv2.THRESH_BINARY)
@@ -112,10 +117,10 @@ def extract_roi(src_ori):
 
     roi_center_x = (most_left + cx) // 2
     roi_center_column = rotated_trans_binary[0:rotated_ori.shape[0], roi_center_x]
-    overall_center_column = rotated_binary[0:rotated_ori.shape[0], int(most_left * 0.4 + 0.6 * cx)]
+    overall_center_column = rotated_binary[0:rotated_ori.shape[0], int(most_left * 0.7 + 0.3 * cx)]
 
     white_ys = np.nonzero(roi_center_column)[0]
-    most_top = white_ys[0]
+    most_top = np.nonzero(overall_center_column)[0][0]
     most_bottom = np.nonzero(overall_center_column)[0][-1]
 
     cut_range = (most_left, most_bottom, most_right, most_top)
@@ -132,23 +137,24 @@ def extract_roi(src_ori):
     return roi_for_cnn, pure_roi, show_roi_rectangle, rotate_angle, cut_range
 
 
-def mapping(ori, roi_res, rotate_degree, cut_range):
+def mapping(orix, roi_res, rotate_degree, cut_range, need_flip):
+    if need_flip:
+        ori = cv2.flip(orix, 0)
+    else:
+        ori = orix.copy()
     width = cut_range[2] - cut_range[0]
     height = cut_range[1] - cut_range[3]
-    roi_normal_size = utils.resize(roi_res, height, width)
-    cv2.imshow("22",roi_normal_size)
+    roi_normal_size = utils.resize(roi_res, width, height)
+    cv2.imshow("22", roi_normal_size)
     cv2.waitKey(0)
     rotated = rotate_bound(ori, -rotate_degree)
     rotate_add = cv2.cvtColor(rotated, cv2.COLOR_GRAY2RGB)
 
     (x1, y2, x2, y1) = cut_range
-   # print(rotate_add[y1:y2][x1:x2])
-    # need more fast!
-    for i in range(roi_normal_size.shape[0]):
-        for j in range(roi_normal_size.shape[1]):
-            #print(i,j)
-            if roi_normal_size[i][j]>77:
-                rotate_add[y1+i][x1+j] = [0,0,255]
+    aux = np.zeros((int(rotated.shape[0]), int(rotated.shape[1])))
+    # print(roi_normal_size.shape)
+    aux[y1:y2, x1:x2] = roi_normal_size
+    rotate_add[aux > 0] = [0, 0, 255]
 
     rotate_back = rotate_bound(rotate_add, rotate_degree)
 
@@ -158,16 +164,34 @@ def mapping(ori, roi_res, rotate_degree, cut_range):
     right = rotate_back.shape[1] - cut_horizon
 
     rotate_back = rotate_back[top:bottom, left:right]
-    return rotate_back
+    if need_flip:
+        return cv2.flip(rotate_back, 0)
+    else:
+        return rotate_back
+
+
+def get_roi(image, i):
+    need_flip = False
+    if not is_right_hand(image):
+        src_ori = cv2.flip(image, 0)
+        need_flip = True
+    else:
+        src_ori = image.copy()
+    roi_for_cnn, roi, show_roi, angle, cut_range = _extract_roi(src_ori, i)
+    return roi_for_cnn, roi, show_roi, angle, cut_range, need_flip
 
 
 if __name__ == '__main__':
-    for i in range(5, 7):
+    for i in range(5, 8):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
-        roi_for_cnn, roi, show_roi, angle, cut_range = extract_roi(img)
+
+        # GET ROI
+        roi_for_cnn, roi, show_roi, angle, cut_range, need_flip = get_roi(img, i)
         cv2.imwrite("roi/roi{}.jpg".format(i), roi_for_cnn)
         cv2.imwrite("roi/show_roi{}.jpg".format(i), show_roi)
 
-        _,roi_res = cv2.threshold(roi_for_cnn,180,255,cv2.THRESH_BINARY)
-        final = mapping(img, roi_res, angle, cut_range)
+        # SIMPLE SEGMENTATION
+        _, roi_res = cv2.threshold(roi_for_cnn, 100, 255, cv2.THRESH_BINARY_INV)
+
+        final = mapping(img, roi_res, angle, cut_range, need_flip)
         cv2.imwrite("pics/final{}.jpg".format(i), final)
