@@ -38,14 +38,3 @@ def skin_ostu(img):
             img[i, j] = img[i, j] * mask[i, j]
 
     return img
-
-
-def local():
-    for i in range(1, 4):
-        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_COLOR)
-        res = skin_ostu(img)
-        cv2.imwrite("pics/result{}.jpg".format(i), res)
-
-
-if __name__ == '__main__':
-    local()

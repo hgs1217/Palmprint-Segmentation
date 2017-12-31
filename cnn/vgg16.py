@@ -226,13 +226,3 @@ class VGG16:
                     print("test: train %d, loss %g, accu %g" % (i, loss_batch, accu))
 
             saver.save(sess, CKPT_PATH)
-            # total = 100
-            # train_loss, train_accu = np.zeros(total), np.zeros(total)
-            # for j in range(total):
-            #     x_test, y_test = self.test_generator(j, total)
-            #     loss_batch, accu = sess.run([loss, accuracy],
-            #                                     feed_dict={self.x: x_test, self.y: y_test,
-            #                                                self.keep_prob: 1.0,
-            #                                                self.width: len(y_test)})
-            #     train_loss[j], train_accu = loss_batch, accuracy
-            # print("train %d, loss %g, accu %g" % (i, loss_batch, accu))

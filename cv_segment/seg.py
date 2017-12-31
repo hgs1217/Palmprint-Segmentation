@@ -54,17 +54,15 @@ def seg(img):
 
 
 def local():
-    # for i in range(1, 4):
-    #     img = cv2.imread("pics/cut{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
-    #     con = contrast(img)
-    #     # res = seg(con)
-    #     res = con
-    #     cv2.imwrite("pics/result{}.jpg".format(i), res)
+    for i in range(1, 4):
+        img = cv2.imread("pics/cut{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+        con = contrast(img)
+        res = seg(con)
+        cv2.imwrite("pics/result{}.jpg".format(i), res)
     for i in range(4, 5):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
         con = contrast(img)
-        # res = con
-        res = seg(con)
+        res = con
         cv2.imwrite("pics/result{}.jpg".format(i), res)
 
 
@@ -114,13 +112,10 @@ def main():
                 _, res = cv2.threshold(seg(con), 125, 255, cv2.THRESH_BINARY)
                 roi_for_cnn, _, _, _, _, _, cut_seg = get_roi(img, res, 0)
                 roi_for_cnn = contrast(roi_for_cnn)
-                # resize_raw = resize(con, 256, 256)
-                # _, resize_output = cv2.threshold(resize(res, 256, 256), 125, 255, cv2.THRESH_BINARY)
                 cv2.imwrite("%s/%s" % (OUTPUT_DIR, filename), cut_seg)
                 cv2.imwrite("%s/%s" % (RESIZE_DIR, filename), roi_for_cnn)
 
 
 if __name__ == '__main__':
     main()
-    # keep_ori()
     # local()

@@ -21,9 +21,6 @@ def msra_initializer(ksize, filter_num):
 
 
 def orthogonal_initializer(scale=1.1):
-    """
-    From Lasagne and Keras. Reference: Saxe et al., http://arxiv.org/abs/1312.6120
-    """
     def _initializer(shape, dtype=tf.float32, partition_info=None):
         flat_shape = (shape[0], np.prod(shape[1:]))
         a = np.random.normal(0.0, 1.0, flat_shape)
@@ -296,7 +293,9 @@ class SegNet:
             saver.save(sess, CKPT_PATH)
             print("end saving....\n")
 
-    def check(self):
+    def check(self, test_img):
+        img = np.reshape(test_img, [128, 128, 1])
+
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
 
@@ -306,23 +305,12 @@ class SegNet:
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, CKPT_PATH)
 
-            batch_xs, batch_ys = self.check_generator()
+            batch_xs = batch_ys = tf.stack([img]).eval()
             feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: 1, self.is_training: True,
                          self.keep_prob: 1.0}
 
             loss_batch, eval_pre, res = sess.run([loss, eval_prediction, classes], feed_dict=feed_dict)
             per_class_acc(eval_pre, batch_ys)
 
-            # batch_ys = sess.run(tf.argmax(batch_ys, axis=-1))
-
-        print(batch_ys[0].shape)
-        c = np.zeros((128, 128), dtype=np.uint8)
-        for i in range(128):
-            for j in range(128):
-                c[i, j] = batch_ys[0][i][j]
-
-        print(c[0:20, 0:20])
-        print(res[0].shape)
-        print(res[0][0:20, 0:20])
         out = np.array(res[0]) * 255
         cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res2.jpg", out)

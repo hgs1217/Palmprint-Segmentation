@@ -34,11 +34,3 @@ def get_gabor(img):
         res.append(np.asarray(res1))
 
     return res
-
-
-if __name__ == '__main__':
-    for i in range(2, 3):
-        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
-        res = get_gabor(img)
-        for j in range(len(res)):
-            cv2.imwrite("pics/gabor/{}.jpg".format(j), res[j])

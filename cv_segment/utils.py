@@ -69,3 +69,21 @@ def rotate_bound(image, angle):
     M[1, 2] += (nH / 2) - cY
 
     return cv2.warpAffine(image, M, (nW, nH))
+
+
+def sobel_segmentation(image):
+    x = cv2.Sobel(image, cv2.CV_16S, 1, 0, ksize=5)
+    y = cv2.Sobel(image, cv2.CV_16S, 0, 1, ksize=5)
+
+    absX = cv2.convertScaleAbs(x)
+    absY = cv2.convertScaleAbs(y)
+
+    return cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
+
+
+def sobel(img):
+    image = cv2.bilateralFilter(img, 7, 75, 75)
+    image = cv2.medianBlur(image, 7)
+    sobel = sobel_segmentation(image)
+    _, res = cv2.threshold(sobel, 50, 255, cv2.THRESH_TOZERO)
+    return res

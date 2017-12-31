@@ -6,7 +6,7 @@ LOG_PATH = "D:/Computer Science/dataset/palmprint/logs"
 
 TEST_DIR = "D:/Computer Science/dataset/palmprint/test_raw"
 
-# INPUT_DIR = "D:/Computer Science/dataset/palmprint/CASIA-PalmprintV1"
+DATASET_DIR = "D:/Computer Science/dataset/palmprint/CASIA-PalmprintV1"
 INPUT_DIR = "D:/Computer Science/dataset/palmprint/CASIA"
 OUTPUT_DIR = "D:/Computer Science/dataset/palmprint/small_output"
 RESIZE_DIR = "D:/Computer Science/dataset/palmprint/small_raw"
