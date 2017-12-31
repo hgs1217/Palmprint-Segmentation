@@ -110,7 +110,7 @@ def _extract_roi(src_ori, i):
     print("ROI:LBRT-", cut_range)
 
     show_roi_rectangle = rotated_ori.copy()
-    cv2.rectangle(show_roi_rectangle, (most_left, most_top), (most_right, most_bottom), (0, 0, 0))
+    cv2.rectangle(show_roi_rectangle, (most_left, most_top), (most_right, most_bottom), (0, 0, 0), thickness=3)
 
     pure_roi = np.zeros([most_bottom - most_top + 1, most_right - most_left + 1])
     pure_roi = rotated_ori[most_top: most_bottom + 1, most_left: most_right + 1]

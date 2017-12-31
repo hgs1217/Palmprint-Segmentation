@@ -13,7 +13,6 @@ from cv_segment.seg import contrast
 from cnn.segnet import SegNet
 from cv_segment.utils import resize
 
-
 IMG_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/test0.jpg"
 OUT_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res2.jpg"
 
@@ -32,7 +31,7 @@ def main():
 
     res_seg = np.array(res_seg, dtype=np.uint8)
     res_seg = cv2.GaussianBlur(res_seg, (5, 5), 0)
-    _, res_seg = cv2.threshold(res_seg, 185, 255, cv2.THRESH_BINARY)
+    _, res_seg = cv2.threshold(res_seg, 175, 255, cv2.THRESH_BINARY)
     cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/r3.jpg", res_seg)
 
     final = mapping(img, res_seg, angle, cut_range, need_flip)
