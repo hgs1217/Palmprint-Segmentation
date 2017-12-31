@@ -12,11 +12,11 @@ path = "D:/Computer Science/dataset/palmprint/output/0005_m_l_01.jpg"
 
 def main():
     raws_total, labels_total = [], []
-    for parent, dirnames, filenames in os.walk(CON_OUTPUT_DIR):
-        labels_total = ["%s/%s" % (CON_OUTPUT_DIR, name)
+    for parent, dirnames, filenames in os.walk(OUTPUT_DIR):
+        labels_total = ["%s/%s" % (OUTPUT_DIR, name)
                         for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
-    for parent, dirnames, filenames in os.walk(CON_RESIZE_DIR):
-        raws_total = ["%s/%s" % (CON_RESIZE_DIR, name)
+    for parent, dirnames, filenames in os.walk(RESIZE_DIR):
+        raws_total = ["%s/%s" % (RESIZE_DIR, name)
                       for name in (filter(lambda x: x.split(".")[-1] == "jpg", filenames))]
 
     total = list(range(len(raws_total)))
@@ -26,9 +26,9 @@ def main():
     raws, raws_test = [raws_total[i] for i in raws_items], [raws_total[i] for i in test_items]
     labels, labels_test = [labels_total[i] for i in raws_items], [labels_total[i] for i in test_items]
 
-    # raws = ["D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/canny1.jpg"]
+    # raws = ["D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/canny2.jpg"]
 
-    segnet = SegNet(raws, labels, raws_test, labels_test, start_step=6000, batch_size=1, epoch_size=700, input_size=128)
+    segnet = SegNet(raws, labels, raws_test, labels_test, start_step=5400, batch_size=1, epoch_size=600, input_size=128)
     segnet.train_network(True)
     # segnet.check()
 

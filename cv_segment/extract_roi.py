@@ -2,7 +2,7 @@
 
 import cv2
 import numpy as np
-import utils
+import cv_segment.utils as utils
 
 PATH = "tmp/"
 
@@ -103,7 +103,7 @@ def _extract_roi(src_ori, i):
     rotated_binary = rotated_binary.astype(np.uint8)
 
     rotated_trans = cv2.distanceTransform(rotated_binary, cv2.DIST_L2, 5)
-    cv2.imwrite(PATH + "rotated_trans{}.jpg".format(i), rotated_trans)
+    # cv2.imwrite(PATH + "rotated_trans{}.jpg".format(i), rotated_trans)
     (cx, cy) = find_center(rotated_trans)
 
     _, rotated_trans_binary = cv2.threshold(rotated_trans, 55, 255, cv2.THRESH_BINARY)
@@ -170,7 +170,7 @@ def mapping(orix, roi_res, rotate_degree, cut_range, need_flip):
         return rotate_back
 
 
-def get_roi(image, i):
+def get_roi(image, img_seg, i):
     need_flip = False
     if not is_right_hand(image):
         src_ori = cv2.flip(image, 0)
@@ -178,20 +178,32 @@ def get_roi(image, i):
     else:
         src_ori = image.copy()
     roi_for_cnn, roi, show_roi, angle, cut_range = _extract_roi(src_ori, i)
-    return roi_for_cnn, roi, show_roi, angle, cut_range, need_flip
+
+    if need_flip:
+        rote = cv2.flip(img_seg,0)
+        rote = rotate_bound(rote, -angle)
+    else:
+        rote = rotate_bound(img_seg,-angle)
+    (x1, y2, x2, y1) = cut_range
+    cut_preseg = rote[y1:y2,x1:x2]
+    cut_preseg = utils.resize(cut_preseg,128,128)
+    return roi_for_cnn, roi, show_roi, angle, cut_range, need_flip, cut_preseg
 
 
 if __name__ == '__main__':
-    for i in range(5, 8):
+    for i in range(13, 14):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+        img_seg = img
 
         # GET ROI
-        roi_for_cnn, roi, show_roi, angle, cut_range, need_flip = get_roi(img, i)
+        roi_for_cnn, roi, show_roi, angle, cut_range, need_flip, cut_seg = get_roi(img, img_seg, 0)
         cv2.imwrite("roi/roi{}.jpg".format(i), roi_for_cnn)
+        cv2.imwrite("roi/seg{}.jpg".format(i), cut_seg)
         cv2.imwrite("roi/show_roi{}.jpg".format(i), show_roi)
 
         # SIMPLE SEGMENTATION
-        _, roi_res = cv2.threshold(roi_for_cnn, 100, 255, cv2.THRESH_BINARY_INV)
+        # _, roi_res = cv2.threshold(roi_for_cnn, 100, 255, cv2.THRESH_BINARY_INV)
 
-        final = mapping(img, roi_res, angle, cut_range, need_flip)
-        cv2.imwrite("pics/final{}.jpg".format(i), final)
+        # final = mapping(img, roi_res, angle, cut_range, need_flip)
+        # cv2.imwrite("pics/final{}.jpg".format(i), final)
+
