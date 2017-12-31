@@ -27,6 +27,24 @@ def resize(image, x, y):
     return cv2.resize(img, (x, y), interpolation=cv2.INTER_CUBIC)
 
 
+def resize_for_roi(roi, src_w, src_h, dst_w, dst_h):
+    actual_h, actual_w = dst_h, dst_w
+    if dst_w > dst_h:
+        actual_w = -int(dst_w / 2 - dst_h / 2) + int(dst_w / 2 + dst_h / 2)
+    elif dst_w < dst_h:
+        actual_h = -int(dst_h / 2 - dst_w / 2) + int(dst_h / 2 + dst_w / 2)
+    resized_actual = cv2.resize(roi, (actual_w, actual_h), interpolation=cv2.INTER_CUBIC)
+    result = np.zeros((dst_h, dst_w))
+
+    if dst_w > dst_h:
+        result[:, int(dst_w / 2 - dst_h / 2):int(dst_w / 2 + dst_h / 2)] = resized_actual
+    elif dst_w < dst_h:
+        result[int(dst_h / 2 - dst_w / 2):int(dst_h / 2 + dst_w / 2), :] = resized_actual
+    else:
+        result = resized_actual
+    return result
+
+
 def enhance_contrast(image):
     hist, bins = np.histogram(image.flatten(), 256, [0, 256])
     cdf = hist.cumsum()
@@ -34,3 +52,20 @@ def enhance_contrast(image):
     cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
     cdf = np.ma.filled(cdf_m, 0).astype('uint8')
     return cv2.LUT(image, cdf)
+
+
+def rotate_bound(image, angle):
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w // 2, h // 2)
+
+    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+
+    return cv2.warpAffine(image, M, (nW, nH))

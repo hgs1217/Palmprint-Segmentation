@@ -7,23 +7,6 @@ import cv_segment.utils as utils
 PATH = "tmp/"
 
 
-def rotate_bound(image, angle):
-    (h, w) = image.shape[:2]
-    (cX, cY) = (w // 2, h // 2)
-
-    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-    cos = np.abs(M[0, 0])
-    sin = np.abs(M[0, 1])
-
-    nW = int((h * sin) + (w * cos))
-    nH = int((h * cos) + (w * sin))
-
-    M[0, 2] += (nW / 2) - cX
-    M[1, 2] += (nH / 2) - cY
-
-    return cv2.warpAffine(image, M, (nW, nH))
-
-
 def output_distance_transform():
     img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
     x, bi_src = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY)
@@ -95,7 +78,7 @@ def _extract_roi(src_ori, i):
     # cv2.imwrite(PATH + "src_trans.jpg", src_trans)
 
     rotate_angle = should_rotate_degree(src_trans)
-    rotated_ori = rotate_bound(src_ori, -rotate_angle)  ##???
+    rotated_ori = utils.rotate_bound(src_ori, -rotate_angle)  ##???
     rotated_ori = rotated_ori.astype(np.uint8)
     # cv2.imwrite("tmp/rotated_ori.jpg", rotated_ori)
 
@@ -144,8 +127,9 @@ def mapping(orix, roi_res, rotate_degree, cut_range, need_flip):
         ori = orix.copy()
     width = cut_range[2] - cut_range[0]
     height = cut_range[1] - cut_range[3]
-    roi_normal_size = utils.resize(roi_res, width, height)
-    rotated = rotate_bound(ori, -rotate_degree)
+    src_h, src_w = roi_res.shape[:2]
+    roi_normal_size = utils.resize_for_roi(roi_res, src_w, src_h, width, height)
+    rotated = utils.rotate_bound(ori, -rotate_degree)
     if np.ndim(rotated) == 2 or np.ndim(rotated) == 3 and rotated.shape[2] == 1:
         rotate_add = cv2.cvtColor(rotated, cv2.COLOR_GRAY2RGB)
     else:
@@ -157,7 +141,7 @@ def mapping(orix, roi_res, rotate_degree, cut_range, need_flip):
     aux[y1:y2, x1:x2] = roi_normal_size
     rotate_add[aux > 0] = [0, 0, 255]
 
-    rotate_back = rotate_bound(rotate_add, rotate_degree)
+    rotate_back = utils.rotate_bound(rotate_add, rotate_degree)
 
     top = cut_vertical = (rotate_back.shape[0] - ori.shape[0]) // 2
     left = cut_horizon = (rotate_back.shape[1] - ori.shape[1]) // 2
@@ -181,19 +165,19 @@ def get_roi(image, img_seg, i):
     roi_for_cnn, roi, show_roi, angle, cut_range = _extract_roi(src_ori, i)
 
     if need_flip:
-        rote = cv2.flip(img_seg,0)
-        rote = rotate_bound(rote, -angle)
+        rote = cv2.flip(img_seg, 0)
+        rote = utils.rotate_bound(rote, -angle)
     else:
-        rote = rotate_bound(img_seg,-angle)
+        rote = utils.rotate_bound(img_seg, -angle)
     (x1, y2, x2, y1) = cut_range
-    cut_preseg = rote[y1:y2,x1:x2]
-    cut_preseg = utils.resize(cut_preseg,128,128)
+    cut_preseg = rote[y1:y2, x1:x2]
+    cut_preseg = utils.resize(cut_preseg, 128, 128)
     return roi_for_cnn, roi, show_roi, angle, cut_range, need_flip, cut_preseg
 
 
 if __name__ == '__main__':
     for i in range(13, 14):
-        img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread("pics/r{}.jpg".format(i - 12), cv2.IMREAD_GRAYSCALE)
         img_seg = img
 
         # GET ROI
@@ -204,7 +188,6 @@ if __name__ == '__main__':
 
         # SIMPLE SEGMENTATION
         # _, roi_res = cv2.threshold(roi_for_cnn, 100, 255, cv2.THRESH_BINARY_INV)
-
-        # final = mapping(img, roi_res, angle, cut_range, need_flip)
-        # cv2.imwrite("pics/final{}.jpg".format(i), final)
-
+        roi_res = cv2.imread("pics/r3.jpg", cv2.IMREAD_GRAYSCALE)
+        final = mapping(img, roi_res, angle, cut_range, need_flip)
+        cv2.imwrite("pics/final{}.jpg".format(i), final)
