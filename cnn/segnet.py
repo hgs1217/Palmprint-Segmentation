@@ -111,8 +111,8 @@ def norm_layer(x, lsize, bias=1.0, alpha=1e-4, beta=0.75, name=None):
 
 
 class SegNet:
-    def __init__(self, raws, labels, test_raws, test_labels, input_size=256, keep_pb=0.5, num_classes=2,
-                 batch_size=1, epoch_size=100, learning_rate=0.001, start_step=0):
+    def __init__(self, raws=None, labels=None, test_raws=None, test_labels=None, input_size=256, keep_pb=0.5,
+                 num_classes=2, batch_size=1, epoch_size=100, learning_rate=0.001, start_step=0):
         """
         :param raws: path list of raw images
         :param labels: path list of labels
@@ -167,21 +167,6 @@ class SegNet:
         conv4_3 = conv_layer(conv4_2, 3, 1, 512, is_training, "conv4_3")
         pool4, pool4_indices = max_pool_layer(conv4_3, 2, 2, "pool4")
         encdrop4 = tf.nn.dropout(pool4, self.keep_prob, name="encdrop4")
-
-        # conv5_1 = conv_layer(encdrop4, 3, 1, 512, is_training, "conv5_1")
-        # conv5_2 = conv_layer(conv5_1, 3, 1, 512, is_training, "conv5_2")
-        # conv5_3 = conv_layer(conv5_2, 3, 1, 512, is_training, "conv5_3")
-        # pool5, pool5_indices = max_pool_layer(conv5_3, 2, 2, "pool5")
-        # encdrop5 = tf.nn.dropout(pool5, self.keep_prob, name="encdrop5")
-        #
-        # upsample5 = deconv_layer(encdrop5, 2, 512, [batch_size, 8, 8, 512], name="upsample5")
-        # conv_decode5_3 = conv_layer(upsample5, 3, 1, 512, is_training, "conv_decode5_3", relu_flag=False,
-        #                           in_channel=512)
-        # conv_decode5_2 = conv_layer(conv_decode5_3, 3, 1, 512, is_training, "conv_decode5_2", relu_flag=False,
-        #                             in_channel=512)
-        # conv_decode5_1 = conv_layer(conv_decode5_2, 3, 1, 512, is_training, "conv_decode5_1", relu_flag=False,
-        #                             in_channel=512)
-        # decdrop5 = tf.nn.dropout(conv_decode5_1, self.keep_prob, name="decdrop5")
 
         upsample4 = deconv_layer(encdrop4, 2, 512, [batch_size, 16, 16, 512], name="upsample4")
         conv_decode4_3 = conv_layer(upsample4, 3, 1, 512, is_training, "conv_decode4_3", relu_flag=False,
@@ -264,17 +249,7 @@ class SegNet:
     def test_generator(self):
         rand_num = random.sample(range(len(self.test_raws)), self.batch_size)
         raws_test, labels_test = [self.test_raws[i] for i in rand_num], [self.test_labels[i] for i in rand_num]
-        # isize = self.batch_size
-        # raws_test = self.test_raws[i * isize: i * isize + isize]
-        # labels_test = self.test_labels[i * isize: i * isize + isize]
         return self.load_img(raws_test, False), self.load_img(labels_test, True)
-
-    def check_generator(self):
-        # batch_raws, batch_labels = [self.raws[i] for i in range(self.batch_size)], \
-        #                            [self.labels[i] for i in range(self.batch_size)]
-        rand_num = [-1]
-        batch_raws, batch_labels = [self.raws[i] for i in rand_num], [self.labels[i] for i in rand_num]
-        return self.load_img(batch_raws, False), self.load_img(batch_labels, True)
 
     def train_network(self, is_finetune=False):
         config = tf.ConfigProto()
@@ -360,7 +335,9 @@ class SegNet:
             saver.save(sess, CKPT_PATH)
             print("end saving....\n")
 
-    def check(self):
+    def check(self, test_img):
+        img = np.reshape(test_img, [128, 128, 1])
+
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
 
@@ -370,23 +347,21 @@ class SegNet:
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, CKPT_PATH)
 
-            batch_xs, batch_ys = self.check_generator()
+            batch_xs = batch_ys = tf.stack([img]).eval()
             feed_dict = {self.x: batch_xs, self.y: batch_ys, self.width: 1, self.is_training: True,
                          self.keep_prob: 1.0}
 
             loss_batch, eval_pre, res = sess.run([loss, eval_prediction, classes], feed_dict=feed_dict)
-            per_class_acc(eval_pre, batch_ys)
+            # per_class_acc(eval_pre, batch_ys)
 
-            # batch_ys = sess.run(tf.argmax(batch_ys, axis=-1))
-
-        print(batch_ys[0].shape)
-        c = np.zeros((128, 128), dtype=np.uint8)
-        for i in range(128):
-            for j in range(128):
-                c[i, j] = batch_ys[0][i][j]
-
-        print(c[0:20, 0:20])
-        print(res[0].shape)
-        print(res[0][0:20, 0:20])
+        # print(batch_ys[0].shape)
+        # c = np.zeros((128, 128), dtype=np.uint8)
+        # for i in range(128):
+        #     for j in range(128):
+        #         c[i, j] = batch_ys[0][i][j]
+        #
+        # print(c[0:20, 0:20])
+        # print(res[0].shape)
+        # print(res[0][0:20, 0:20])
         out = np.array(res[0]) * 255
-        cv2.imwrite("D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res2.jpg", out)
+        return out

@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-def skin_otsu(img):
+def skin_ostu(img):
     img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     img_cr = cv2.split(img_ycrcb)[1]
 
@@ -43,7 +43,7 @@ def skin_otsu(img):
 def local():
     for i in range(1, 4):
         img = cv2.imread("pics/test{}.jpg".format(i), cv2.IMREAD_COLOR)
-        res = skin_otsu(img)
+        res = skin_ostu(img)
         cv2.imwrite("pics/result{}.jpg".format(i), res)
 
 

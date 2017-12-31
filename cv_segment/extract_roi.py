@@ -103,7 +103,7 @@ def _extract_roi(src_ori, i):
     rotated_binary = rotated_binary.astype(np.uint8)
 
     rotated_trans = cv2.distanceTransform(rotated_binary, cv2.DIST_L2, 5)
-    # cv2.imwrite(PATH + "rotated_trans{}.jpg".format(i), rotated_trans)
+    cv2.imwrite(PATH + "rotated_trans{}.jpg".format(i), rotated_trans)
     (cx, cy) = find_center(rotated_trans)
 
     _, rotated_trans_binary = cv2.threshold(rotated_trans, 55, 255, cv2.THRESH_BINARY)
@@ -113,7 +113,7 @@ def _extract_roi(src_ori, i):
     # print(center_line)
     white_xs = np.nonzero(center_line)[0]
     most_left = int(white_xs[0])
-    most_right = min(int(cx + (cx - most_left) * 0.3), int(white_xs[-1]))
+    most_right = min(int(cx + (cx - most_left) * 0.6), int(white_xs[-1]))
 
     roi_center_x = (most_left + cx) // 2
     roi_center_column = rotated_trans_binary[0:rotated_ori.shape[0], roi_center_x]
@@ -145,10 +145,11 @@ def mapping(orix, roi_res, rotate_degree, cut_range, need_flip):
     width = cut_range[2] - cut_range[0]
     height = cut_range[1] - cut_range[3]
     roi_normal_size = utils.resize(roi_res, width, height)
-    cv2.imshow("22", roi_normal_size)
-    cv2.waitKey(0)
     rotated = rotate_bound(ori, -rotate_degree)
-    rotate_add = cv2.cvtColor(rotated, cv2.COLOR_GRAY2RGB)
+    if np.ndim(rotated) == 2 or np.ndim(rotated) == 3 and rotated.shape[2] == 1:
+        rotate_add = cv2.cvtColor(rotated, cv2.COLOR_GRAY2RGB)
+    else:
+        rotate_add = rotated
 
     (x1, y2, x2, y1) = cut_range
     aux = np.zeros((int(rotated.shape[0]), int(rotated.shape[1])))
