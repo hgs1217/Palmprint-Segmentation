@@ -12,5 +12,5 @@ OUTPUT_DIR = "D:/Computer Science/dataset/palmprint/small_output"
 RESIZE_DIR = "D:/Computer Science/dataset/palmprint/small_raw"
 
 CON_INPUT_DIR = "D:/Computer Science/dataset/palmprint/con_r"
-CON_OUTPUT_DIR = "D:/Computer Science/dataset/palmprint/out"
-CON_RESIZE_DIR = "D:/Computer Science/dataset/palmprint/raw"
+CON_OUTPUT_DIR = "D:/Computer Science/dataset/palmprint/con_out"
+CON_RESIZE_DIR = "D:/Computer Science/dataset/palmprint/con_raw"

@@ -45,6 +45,10 @@ def resize_for_roi(roi, src_w, src_h, dst_w, dst_h):
     return result
 
 
+def resize_raw(image, x, y):
+    return cv2.resize(image, (x, y), interpolation=cv2.INTER_AREA)
+
+
 def enhance_contrast(image):
     hist, bins = np.histogram(image.flatten(), 256, [0, 256])
     cdf = hist.cumsum()

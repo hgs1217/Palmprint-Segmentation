@@ -8,8 +8,8 @@ from cv_segment.extract_roi import get_roi, mapping
 from cv_segment.seg import contrast
 from cnn.segnet import SegNet
 
-IMG_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/test0.jpg"
-OUT_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res2.jpg"
+IMG_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/testt.jpg"
+OUT_PATH = "D:/Computer Science/Github/Palmprint-Segmentation/cv_segment/pics/net_res4.jpg"
 
 
 def main():
